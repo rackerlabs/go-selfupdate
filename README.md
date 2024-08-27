@@ -1,6 +1,6 @@
 # go-selfupdate
 
-[![GoDoc](https://godoc.org/github.com/rackerlabs/go-selfupdate/selfupdate?status.svg)](https://godoc.org/github.com/rackerlabs/go-selfupdate/selfupdate)
+[![GoDoc](https://godoc.org/github.com/sanbornm/go-selfupdate/selfupdate?status.svg)](https://godoc.org/github.com/rackerlabs/go-selfupdate/selfupdate)
 ![CI/CD](https://github.com/rackerlabs/go-selfupdate/actions/workflows/ci.yml/badge.svg)
 
 Enable your Golang applications to self update. Inspired by Chrome based on Heroku's [hk](https://github.com/heroku/hk).
