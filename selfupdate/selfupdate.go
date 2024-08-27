@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/url"
 	"os"
@@ -27,7 +25,8 @@ const (
 )
 
 var (
-	ErrHashMismatch = errors.New("new file hash mismatch after patch")
+	ErrPatchHashMismatch = errors.New("Hash mismatch from patched binary")
+	ErrBinHashMismatch   = errors.New("Hash mismatch from full binary")
 
 	defaultHTTPRequester = HTTPRequester{}
 )
@@ -206,22 +205,9 @@ func (u *Updater) Update() error {
 
 	bin, err := u.fetchAndVerifyPatch(old)
 	if err != nil {
-		if err == ErrHashMismatch {
-			log.Println("update: hash mismatch from patched binary")
-		} else {
-			if u.DiffURL != "" {
-				log.Println("update: patching binary,", err)
-			}
-		}
-
 		// if patch failed grab the full new bin
 		bin, err = u.fetchAndVerifyFullBin()
 		if err != nil {
-			if err == ErrHashMismatch {
-				log.Println("update: hash mismatch from full binary")
-			} else {
-				log.Println("update: fetching full binary,", err)
-			}
 			return err
 		}
 	}
@@ -253,7 +239,7 @@ func fromStream(updateWith io.Reader) (err error, errRecover error) {
 	}
 
 	var newBytes []byte
-	newBytes, err = ioutil.ReadAll(updateWith)
+	newBytes, err = io.ReadAll(updateWith)
 	if err != nil {
 		return
 	}
@@ -262,7 +248,7 @@ func fromStream(updateWith io.Reader) (err error, errRecover error) {
 	updateDir := filepath.Dir(updatePath)
 	filename := filepath.Base(updatePath)
 
-	// Copy the contents of of newbinary to a the new executable file
+	// Copy the contents of newbinary to a the new executable file
 	newPath := filepath.Join(updateDir, fmt.Sprintf(".%s.new", filename))
 	fp, err := os.OpenFile(newPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
@@ -332,7 +318,7 @@ func (u *Updater) fetchAndVerifyPatch(old io.Reader) ([]byte, error) {
 		return nil, err
 	}
 	if !verifySha(bin, u.Info.Sha256) {
-		return nil, ErrHashMismatch
+		return nil, ErrPatchHashMismatch
 	}
 	return bin, nil
 }
@@ -355,7 +341,7 @@ func (u *Updater) fetchAndVerifyFullBin() ([]byte, error) {
 	}
 	verified := verifySha(bin, u.Info.Sha256)
 	if !verified {
-		return nil, ErrHashMismatch
+		return nil, ErrBinHashMismatch
 	}
 	return bin, nil
 }
@@ -396,7 +382,7 @@ func (u *Updater) fetch(url string) (io.ReadCloser, error) {
 }
 
 func readTime(path string) time.Time {
-	p, err := ioutil.ReadFile(path)
+	p, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return time.Time{}
 	}
@@ -417,5 +403,5 @@ func verifySha(bin []byte, sha []byte) bool {
 }
 
 func writeTime(path string, t time.Time) bool {
-	return ioutil.WriteFile(path, []byte(t.Format(time.RFC3339)), 0644) == nil
+	return os.WriteFile(path, []byte(t.Format(time.RFC3339)), 0644) == nil
 }
