@@ -5,6 +5,8 @@
 
 Enable your Golang applications to self update. Inspired by Chrome based on Heroku's [hk](https://github.com/heroku/hk).
 
+Forked from `sanbornm/go-selfupdate` in order to clean up the log statements.
+
 ## Features
 
 - Tested on Mac, Linux, Arm, and Windows
